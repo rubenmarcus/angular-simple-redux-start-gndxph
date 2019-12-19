@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
-import { BehaviorSubject, Observable,merge ,interval} from 'rxjs';
-import { mapTo, tap, scan,filter, mergeMap,} from 'rxjs/operators';
+import { BehaviorSubject, Observable,merge ,interval, EMPTY} from 'rxjs';
+import { mapTo, tap, scan,filter, switchMap, distinctUntilChanged} from 'rxjs/operators';
 
 /*
 Objetivos:
@@ -40,8 +40,9 @@ export class AppComponent  {
 
 
   timerEffect$ = this.actions$.pipe(
-    filter(a=> a === Action.Start),
-    mergeMap(a => interval(1000)),
+    filter(a=> a === Action.Start ||  a === Action.Pause),
+    distinctUntilChanged(),
+    switchMap(a => a === Action.Start ? interval(1000) : EMPTY),
     mapTo(Action.Add),
     tap(console.log)
   )
