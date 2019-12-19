@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { mapTo, tap } from 'rxjs/operators';
+import { BehaviorSubject, Observable,merge ,interval} from 'rxjs';
+import { mapTo, tap, scan,filter, mergeMap,} from 'rxjs/operators';
 
 /*
 Objetivos:
@@ -38,9 +38,34 @@ export class AppComponent  {
   actionType = Action;
   actions$ = new BehaviorSubject(Action.Reset);
 
-  state$: Observable<AppState> = this.actions$.pipe(
+
+  timerEffect$ = this.actions$.pipe(
+    filter(a=> a === Action.Start),
+    mergeMap(a => interval(1000)),
+    mapTo(Action.Add),
+    tap(console.log)
+  )
+
+  state$: Observable<AppState> = merge( 
+    this.actions$,
+    this.timerEffect$,
+    ).pipe(
     tap(a => console.log(Action[a])),
-    mapTo({...this.initialState}),
+    scan((state, action) =>{
+
+      switch(action){
+        case Action.Add:
+        return { count : state.count + 1}
+        break;
+        case Action.Subtract:
+        return { count : state.count - 1}
+        case Action.Reset:
+        return { ...this.initialState}
+
+      }
+     
+      return state
+    },{ ...this.initialState})
   );
 
 }
